@@ -20,37 +20,7 @@ if isPyPy then null else buildPythonPackage rec {
     hash = "sha256-vLPvQ+WGZbvaL7GYaY/K5ndkg+DEpjGqVkeAbCXgLMA=";
   };
 
-  patches = [
-    #
-    # Trusts the libffi library inside of nixpkgs on Apple devices.
-    #
-    # Based on some analysis I did:
-    #
-    #   https://groups.google.com/g/python-cffi/c/xU0Usa8dvhk
-    #
-    # I believe that libffi already contains the code from Apple's fork that is
-    # deemed safe to trust in cffi.
-    #
-    ./darwin-use-libffi-closures.diff
-    (fetchpatch {
-      # Drop py.code usage from tests, no longer depend on the deprecated py package
-      url = "https://foss.heptapod.net/pypy/cffi/-/commit/9c7d865e17ec16a847090a3e0d1498b698b99756.patch";
-      excludes = [
-        "README.md"
-        "requirements.txt"
-      ];
-      hash = "sha256-HSuLLIYXXGGCPccMNLV7o1G3ppn2P0FGCrPjqDv2e7k=";
-    })
-    (fetchpatch {
-      #  Replace py.test usage with pytest
-      url = "https://foss.heptapod.net/pypy/cffi/-/commit/bd02e1b122612baa74a126e428bacebc7889e897.patch";
-      excludes = [
-        "README.md"
-        "requirements.txt"
-      ];
-      hash = "sha256-+2daRTvxtyrCPimOEAmVbiVm1Bso9hxGbaAbd03E+ws=";
-    })
-  ] ++ lib.optionals (stdenv.cc.isClang && lib.versionAtLeast (lib.getVersion stdenv.cc) "13") [
+  patches =  lib.optionals (stdenv.cc.isClang && lib.versionAtLeast (lib.getVersion stdenv.cc) "13") [
     # -Wnull-pointer-subtraction is enabled with -Wextra. Suppress it to allow the following tests
     # to run and pass when cffi is built with newer versions of clang:
     # - testing/cffi1/test_verify1.py::test_enum_usage
